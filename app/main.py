@@ -1,3 +1,6 @@
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi import FastAPI, File, UploadFile, HTTPException, BackgroundTasks
+import uuid
 from datetime import datetime
 from typing import List
 import pickle
@@ -5,8 +8,6 @@ import zipfile
 import shutil
 import os
 
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import fitz
 import pytesseract
@@ -111,31 +112,92 @@ def organize_documents(classiications: dict, output_folder: str):
             category_folder, os.path.basename(file_path)))
 
 
-# Create endpoint to classify documents
+# Carpeta base para almacenar archivos temporales
+BASE_OUTPUT_FOLDER = "classified_temp"
+os.makedirs(BASE_OUTPUT_FOLDER, exist_ok=True)
+
+
 @app.post("/classify")
-def classify_zip(request: BodyRequest):
-    input_zip: str = request.input_zip
-    output_folder: str = request.output_folder
+async def classify_zip(file: UploadFile = File(...)):
+    # Crear una carpeta única para esta solicitud
+    request_id = str(uuid.uuid4())
+    temp_folder = os.path.join(BASE_OUTPUT_FOLDER, request_id)
+    os.makedirs(temp_folder, exist_ok=True)
 
-    temp_extract_path = "temp_documents"
-    os.makedirs(temp_extract_path, exist_ok=True)
+    # Guardar el archivo ZIP temporalmente
+    temp_zip_path = os.path.join(temp_folder, file.filename)
+    with open(temp_zip_path, "wb") as f:
+        f.write(await file.read())
 
-    # Extract files
-    with zipfile.ZipFile(input_zip, "r") as zip_ref:
-        zip_ref.extractall(temp_extract_path)
+    try:
+        # Extraer y clasificar documentos
+        extract_folder = os.path.join(temp_folder, "extracted")
+        os.makedirs(extract_folder, exist_ok=True)
+        with zipfile.ZipFile(temp_zip_path, "r") as zip_ref:
+            zip_ref.extractall(extract_folder)
 
-    # Process anyd classiffy
-    documents = process_documents(temp_extract_path)
-    classifications = classify_documents(documents)
-    organize_documents(classifications, output_folder)
+        # Procesar y clasificar documentos
+        documents = process_documents(extract_folder)
+        classifications = classify_documents(documents)
 
-    # Clean up the temp files
-    shutil.rmtree(temp_extract_path)
+        # Mover los archivos clasificados a una carpeta de salida
+        output_folder = os.path.join(temp_folder, "classified_output")
+        os.makedirs(output_folder, exist_ok=True)
+        organize_documents(classifications, output_folder)
 
-    return JSONResponse(
-        status_code=200,
-        content={
-            "message": "Classifications completed successfully",
-            "results": classifications
-        }
+        # Crear un archivo ZIP solo con la carpeta de salida clasificada
+        output_zip_path = os.path.join(temp_folder, "classified_files.zip")
+        with zipfile.ZipFile(output_zip_path, "w") as zipf:
+            for root, _, files in os.walk(output_folder):
+                for file_name in files:
+                    file_path = os.path.join(root, file_name)
+                    arcname = os.path.relpath(file_path, output_folder)
+                    zipf.write(file_path, arcname)
+
+        return JSONResponse(
+            status_code=200,
+            content={
+                "message": "Classifications completed successfully",
+                "request_id": request_id,
+                "download_link": f"/download/{request_id}"
+            }
+        )
+    except Exception as e:
+        # Limpiar en caso de error
+        shutil.rmtree(temp_folder, ignore_errors=True)
+        raise HTTPException(
+            status_code=500, detail=f"Error processing file: {str(e)}"
+        )
+
+
+@app.get("/download/{request_id}")
+async def download_classified_files(
+    request_id: str, background_tasks: BackgroundTasks
+):
+    # Verificar que la carpeta de la solicitud exista
+    temp_folder = os.path.join(BASE_OUTPUT_FOLDER, request_id)
+    output_zip_path = os.path.join(temp_folder, "classified_files.zip")
+
+    if not os.path.exists(output_zip_path):
+        raise HTTPException(
+            status_code=404, detail="Files not found or already downloaded"
+        )
+
+    # Agregar la tarea de limpieza en segundo plano
+    background_tasks.add_task(cleanup_temp_folder, temp_folder)
+
+    # Devolver el archivo ZIP
+    return FileResponse(
+        output_zip_path,
+        media_type="application/zip",
+        filename="classified_files.zip"
     )
+
+
+# Función para eliminar la carpeta temporal
+def cleanup_temp_folder(temp_folder: str):
+    try:
+        shutil.rmtree(temp_folder, ignore_errors=True)
+        print(f"Carpeta temporal eliminada: {temp_folder}")
+    except Exception as e:
+        print(f"Error eliminando la carpeta temporal: {e}")
