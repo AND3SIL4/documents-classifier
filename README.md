@@ -2,4 +2,4 @@
 
 ---
 
-_Created by [Felipe Silva](github.com/and3sil4)_
+\_Created by [Felipe Silva](https://github.com/and3sil4)
