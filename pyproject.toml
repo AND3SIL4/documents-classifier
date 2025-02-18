@@ -6,4 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi[standard]>=0.115.8",
+    "pymupdf>=1.25.3",
+    "pytesseract>=0.3.13",
+    "scikit-learn>=1.6.1",
 ]
