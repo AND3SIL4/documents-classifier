@@ -1,0 +1,231 @@
+---
+import MachineLearning from "../assets/MachineLearning.astro";
+import DownloadIcon from "../assets/Download.astro";
+---
+
+<form action="" id="form">
+  <label class="custum-file-upload" for="file">
+    <div class="icon">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="" viewBox="0 0 24 24"><g stroke-width="0" id="SVGRepo_bgCarrier"></g><g stroke-linejoin="round" stroke-linecap="round" id="SVGRepo_tracerCarrier"></g><g id="SVGRepo_iconCarrier"> <path fill="" d="M10 1C9.73478 1 9.48043 1.10536 9.29289 1.29289L3.29289 7.29289C3.10536 7.48043 3 7.73478 3 8V20C3 21.6569 4.34315 23 6 23H7C7.55228 23 8 22.5523 8 22C8 21.4477 7.55228 21 7 21H6C5.44772 21 5 20.5523 5 20V9H10C10.5523 9 11 8.55228 11 8V3H18C18.5523 3 19 3.44772 19 4V9C19 9.55228 19.4477 10 20 10C20.5523 10 21 9.55228 21 9V4C21 2.34315 19.6569 1 18 1H10ZM9 7H6.41421L9 4.41421V7ZM14 15.5C14 14.1193 15.1193 13 16.5 13C17.8807 13 19 14.1193 19 15.5V16V17H20C21.1046 17 22 17.8954 22 19C22 20.1046 21.1046 21 20 21H13C11.8954 21 11 20.1046 11 19C11 17.8954 11.8954 17 13 17H14V16V15.5ZM16.5 11C14.142 11 12.2076 12.8136 12.0156 15.122C10.2825 15.5606 9 17.1305 9 19C9 21.2091 10.7909 23 13 23H20C22.2091 23 24 21.2091 24 19C24 17.1305 22.7175 15.5606 20.9844 15.122C20.7924 12.8136 18.858 11 16.5 11Z" clip-rule="evenodd" fill-rule="evenodd"></path> </g></svg>
+    </div>
+    <div class="text">
+      <span>Clic para subir archivo</span>
+    </div>
+    <input type="file" id="file">
+  </label>
+  <div class="btn-container">
+    <button type="submit" class="btn"><MachineLearning /> Clasificar documentos</button>
+    <button type="button" class="btn" id="download-btn"><DownloadIcon/> Descagar documentos</button>
+  </div>
+  <div id="status" class="mt-4 text-sm"></div>
+</form>
+
+<script>
+  // Get the elemtns
+  const form = document.getElementById("form");
+  const donwloadButton = document.getElementById("download-btn")
+  const statusDiv = document.getElementById("status")
+
+  const API_URL = "http://127.0.0.1:8000";
+  let download_url = null;
+
+  // Función para mostrar mensajes de estado
+  const showStatus = (message: string, isError = false) => {
+    if (statusDiv) {
+      statusDiv.textContent = message;
+      statusDiv.className = `msg ${isError ? 'msg-error' : 'msg-success'}`;
+    }
+  };
+
+  form?.addEventListener("submit", async (e) => {
+    try {
+      // Prevent the default behaivor
+      e.preventDefault();
+      const fileInput = document.querySelector("input[type='file']");
+      const file = fileInput.files[0] // Access to the last file uploaded
+
+      if (!file){
+        showStatus("Por favor seleccione un archivo", true);
+      }
+
+      // Convert to form data type 
+      const formData = new FormData()
+      formData.append("file", file);
+
+      showStatus("Subiendo archivo...");
+      const CLASSIFY_ENDPOINT = `${API_URL}/classify`
+      const response = await fetch(CLASSIFY_ENDPOINT, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Ha ocurrido un error clasificando los documentos")
+      }
+
+      const data = await response.json();
+      download_url = data.download_link;
+      showStatus("Arhivos clasificados correctamente");
+      fileInput.value = ""; // Clean up the input file
+    } catch (error) {
+      showStatus(error.message, true)
+    }
+  });
+
+  donwloadButton?.addEventListener("click", async () => {
+    try {
+      showStatus("Descargando archivo...");
+      const DOWNLOAD_ENDPOINT = `${API_URL}${download_url}`
+      const response = await fetch(DOWNLOAD_ENDPOINT, {
+        method: "GET"
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al descargar el archivo con los documentos clasificados");
+      }
+
+      // Crear blob y descargar
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = "documentos_clasificados.zip";
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      showStatus('Archivo descargado correctamente');
+    } catch (error) {
+      showStatus(error.message, true);
+    }
+  });
+</script>
+
+
+<style>
+  form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+  }
+  .msg {
+    padding: 15px;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .msg-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+  }
+  .msg-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+  }
+  .custum-file-upload {
+    height: 130px;
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: space-between;
+    gap: 20px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed #cacaca;
+    background-color: rgba(255, 255, 255, 1);
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0px 48px 35px -48px rgba(0,0,0,0.1);
+  }
+
+  .custum-file-upload .icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .custum-file-upload .icon svg {
+    height: 80px;
+    fill: rgba(75, 85, 99, 1);
+  }
+
+  .custum-file-upload .text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .custum-file-upload .text span {
+    font-weight: 400;
+    color: rgba(75, 85, 99, 1);
+  }
+
+  .custum-file-upload input {
+    display: none;
+  }
+
+  .btn-container {
+    display: flex;
+    width: 100%;
+    gap: 15px;
+  }
+
+  .btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+  }
+
+  button {
+    appearance: none;
+    background-color: transparent;
+    border: 0.125em solid #1A1A1A;
+    border-radius: 0.9375em;
+    box-sizing: border-box;
+    color: #3B3B3B;
+    cursor: pointer;
+    font-family: Roobert,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+    font-size: 16px;
+    font-weight: 600;
+    line-height: normal;
+    margin: 0;
+    min-height: 3.75em;
+    min-width: 0;
+    outline: none;
+    padding: 1em 2.3em;
+    text-align: center;
+    text-decoration: none;
+    transition: all 300ms cubic-bezier(.23, 1, 0.32, 1);
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    will-change: transform;
+  }
+
+  button:disabled {
+    pointer-events: none;
+  }
+
+  button:hover {
+    color: #fff;
+    background-color: #1A1A1A;
+    box-shadow: rgba(0, 0, 0, 0.25) 0 8px 15px;
+    transform: translateY(-2px);
+  }
+
+  button:active {
+    box-shadow: none;
+    transform: translateY(0);
+  }
+</style>
+
