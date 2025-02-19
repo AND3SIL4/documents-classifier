@@ -1,5 +1,7 @@
 # Document Classifier API
 
+![document-classifier](./images/document-classifier.png)
+
 ## Índice
 
 1. [Descripción del proyecto](#descripción-del-proyecto)
