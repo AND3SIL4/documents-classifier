@@ -1,3 +1,4 @@
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi import FastAPI, File, UploadFile, HTTPException, BackgroundTasks
 import uuid
@@ -14,6 +15,13 @@ import pytesseract
 
 
 app = FastAPI()
+
+
+# Allow cors
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"]
+)
 
 
 # Create a base model to make the body request
