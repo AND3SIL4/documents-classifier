@@ -1,14 +1,16 @@
 ---
+import Download from "./Download.astro";
+
 ---
 
 <div id="container">
 	<main>
 		<section id="hero">
 			<h1>
-        Cargar documento con extensión zip. Eg: <code><pre>documentos.zip</pre></code> posteriormente dar clic en <code><pre>Clasificar</pre></code>
+        Cargar archivo ZIP con los documentos a ser clasificados. Eg: <code><pre>documentos.zip</pre></code>
 			</h1>
 			<section id="links">
-        <input type="file" name="file" />
+        <Download />
 			</section>
 		</section>
 	</main>
@@ -55,6 +57,9 @@
 	#links {
 		display: flex;
 		gap: 16px;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
 	}
 
 	#links a {
