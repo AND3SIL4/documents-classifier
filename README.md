@@ -1,6 +1,7 @@
 # Document Classifier API
 
 ## Índice
+
 1. [Descripción del proyecto](#descripción-del-proyecto)
 2. [Requisitos](#requisitos)
 3. [Instalación](#instalación)
@@ -69,6 +70,7 @@ uv run fastapi dev
 ## Uso de la API
 
 ### Clasificar documentos
+
 Endpoint:
 Método: POST
 URL: /classify
@@ -88,11 +90,11 @@ Código de estado: 200 OK
 Body:
 
 ```json
-  {
-    "message": "Classifications completed successfully",
-    "request_id": "a15d472c-1458-4fdd-9db5-9edbc8061c0a",
-    "download_link": "/download/a15d472c-1458-4fdd-9db5-9edbc8061c0a"
-  }
+{
+  "message": "Classifications completed successfully",
+  "request_id": "a15d472c-1458-4fdd-9db5-9edbc8061c0a",
+  "download_link": "/download/a15d472c-1458-4fdd-9db5-9edbc8061c0a"
+}
 ```
 
 Ejemplo con curl
@@ -105,6 +107,7 @@ curl -X 'POST' \
 ```
 
 ### Descargar archivos clasificados
+
 Endpoint:
 Método: GET
 URL: /download/{request_id}
@@ -117,6 +120,7 @@ Código de estado: 200 OK
 Body: Archivo ZIP (classified_files.zip).
 
 Ejemplo con curl:
+
 ```bash
 curl -X 'GET' \
   'http://127.0.0.1:8000/download/a15d472c-1458-4fdd-9db5-9edbc8061c0a' \
@@ -143,8 +147,9 @@ document-classifier/
 ```
 
 ## Licencia
+
 Este proyecto está bajo la licencia MIT. Para más detalles, consulta el archivo LICENSE.
 
 ---
 
-*Created by [Felipe Silva](https://github.com/and3sil4)*
+_Created by [Felipe Silva](https://github.com/and3sil4)_
