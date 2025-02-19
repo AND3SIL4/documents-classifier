@@ -44,7 +44,7 @@ def root():
         content={
             "status": "working",
             "time": time,
-            "version": "0.0.1",
+            "version": "0.1.3",
             "author": "Felipe Silva"
         }
     )

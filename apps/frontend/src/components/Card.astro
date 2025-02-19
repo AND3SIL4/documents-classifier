@@ -1,0 +1,141 @@
+<div class="floating-card">
+    <div class="card-header">
+        <h3 class="card-title">Datos de la API para clasificar documentos</h3>
+    </div>
+    <div id="cardContent" class="card-content">
+        <div class="loading">Cargando datos...</div>
+    </div>
+</div>
+
+<script>
+  const API_URL = 'http://127.0.0.1:8000/';
+
+  async function fetchData() {
+  const contentElement = document.getElementById('cardContent');
+  try {
+      contentElement.innerHTML = '<div class="loading loading-pulse">Cargando datos...</div>';
+      const response = await fetch(API_URL);
+      if (!response.ok) {
+          throw new Error('Error al obtener los datos');
+      }
+      const data = await response.json();
+      // Renderizar los datos
+      contentElement.innerHTML = Object.entries(data)
+          .map(([key, value]) => `
+              <div class="data-item"  style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+                  <span style="font-weight: bold; color: #4a5568">${key}:</span>
+                  <span style="color: #2d3748; font-weight: 500; font-size: 14px; background: rgba(66, 153, 225, 0.1); padding: 4px 8px; border-radius: 4px;">${value}</span>
+              </div>
+          `).join('');
+    } catch (error) {
+      contentElement.innerHTML = `
+          <div class="error-message">
+              ${error.message}
+          </div>
+      `;
+    }
+  }
+  // Execute for the first time
+  fetchData();
+  // Actualizar cada 5 minutos
+  setInterval(fetchData, 60000);
+</script>
+
+<style>
+  h3 {
+    text-align: center;
+  }
+  .floating-card {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 200px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    padding: 20px;
+    z-index: 1000;
+    transition: transform 0.3s ease;
+  }
+
+  .floating-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+
+  .card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0;
+  }
+
+  .card-content {
+    padding: 10px 0;
+  }
+
+  .data-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .data-item:last-child {
+    border-bottom: none;
+  }
+
+  .data-label {
+    font-weight: bold;
+    color: #4a5568;
+    font-size: 14px;
+  }
+
+  .data-value {
+    color: #2d3748;
+    font-weight: 500;
+    font-size: 14px;
+  }
+
+  .loading {
+    text-align: center;
+    color: #718096;
+    padding: 20px 0;
+  }
+
+  .error-message {
+    color: #e53e3e;
+    text-align: center;
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+  }
+
+  .loading-pulse {
+    animation: pulse 1.5s infinite;
+  }
+
+  @media (max-width: 768px) {
+    .floating-card {
+        width: calc(100% - 40px);
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+    }
+  }
+</style>
