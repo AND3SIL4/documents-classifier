@@ -1,5 +1,7 @@
 # Document Classifier API
 
+![document-classifier](./images/document-classifier.png)
+
 ## Índice
 
 1. [Descripción del proyecto](#descripción-del-proyecto)
@@ -17,7 +19,7 @@
 
 ## Descripción del proyecto
 
-Este proyecto es una API construida con **FastAPI** que permite clasificar documentos (PDF e imágenes) en categorías predefinidas utilizando un modelo de machine learning llamado RandomForest. Los documentos se procesan, clasifican y organizan en carpetas según su categoría. Luego, el usuario puede descargar los archivos clasificados en un archivo ZIP.
+Este proyecto es una API construida con **FastAPI** y **Astro** en una arqutectura de monorepo multipaquete usando **NX** que permite clasificar documentos (PDF e imágenes) en categorías predefinidas utilizando un modelo de machine learning llamado RandomForest. Los documentos se procesan, clasifican y organizan en carpetas según su categoría. Luego, el usuario puede descargar los archivos clasificados en un archivo ZIP.
 
 ---
 
@@ -50,8 +52,10 @@ uv sync
 ```bash
 git clone https://github.com/AND3SIL4/documents-classifier.git ./document-classifier
 cd document-classifier
+npm start
 ```
 
+## Entorno backend (fastapi)
 Crear el entorno virtual
 
 ```bash
